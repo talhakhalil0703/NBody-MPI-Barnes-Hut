@@ -8,10 +8,12 @@
 struct options_t {
     char *in_file;
     char *out_file;
-    int n_threads;
-    int n_loops;
-    bool spin;
+    int steps;
+    double threshold;
+    double timestep;
+    bool visuals;
 };
 
 void get_opts(int argc, char **argv, struct options_t *opts);
+void print_opts(struct options_t * opts);
 #endif

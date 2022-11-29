@@ -1,5 +1,4 @@
 #include "io.h"
-#include "helpers.h"
 
 void read_file(struct options_t* args,
                int*              n_vals,
@@ -28,15 +27,9 @@ void write_file(struct options_t*         args,
 	std::ofstream out;
 	out.open(args->out_file, std::ofstream::trunc);
 
-	// Write solution to output file
-	for (int i = 0; i < opts->n_vals; ++i) {
-		out << opts->output_vals[i] << std::endl;
-	}
-
 	out.flush();
 	out.close();
 
 	// Free memory
-	free(opts->input_vals);
 	// free(opts->output_vals);
 }

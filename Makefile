@@ -3,8 +3,8 @@ SRCS = ./src/*.cpp
 INC = ./src/
 OPTS = -std=c++17 -Wall -Werror -lpthread
 
-EXEC = bin/prefix_scan
-EXEC_DEBUG = bin/prefix_scan_debug
+EXEC = bin/nbody
+EXEC_DEBUG = bin/nbody_debug
 
 all: clean compile test
 debug: compile_debug
