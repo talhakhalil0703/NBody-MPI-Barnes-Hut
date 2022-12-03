@@ -1,29 +1,38 @@
 #include "io.h"
 
-void read_file(struct options_t* args,
-               int*              n_vals,
-               int**             input_vals,
-               int**             output_vals) {
+std::vector<body> read_bodies_file(char *in_file)
+{
 
-  	// Open file
+	int number_of_bodies = 0;
+	// Open file
 	std::ifstream in;
-	in.open(args->in_file);
+	in.open(in_file);
 	// Get num vals
-	in >> *n_vals;
+	in >> number_of_bodies;
 
-	// Alloc input and output arrays
-	*input_vals = (int*) malloc(*n_vals * sizeof(int));
-	*output_vals = (*input_vals);
+	std::vector<body> bodies;
 
-	// Read input vals
-	for (int i = 0; i < *n_vals; ++i) {
-		in >> (*input_vals)[i];
+	// Read bodies vals
+	for (int i = 0; i < number_of_bodies; ++i)
+	{
+		body temp;
+		in >> temp.index;
+		in >> temp.x_pos;
+		in >> temp.y_pos;
+		in >> temp.mass;
+		in >> temp.x_vel;
+		in >> temp.y_vel;
+		bodies.push_back(temp);
 	}
+
+	return bodies;
 }
 
-void write_file(struct options_t*         args,
-               	struct prefix_sum_args_t* opts) {
-  // Open file
+
+void write_file(struct options_t *args,
+				struct prefix_sum_args_t *opts)
+{
+	// Open file
 	std::ofstream out;
 	out.open(args->out_file, std::ofstream::trunc);
 
