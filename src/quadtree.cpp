@@ -39,7 +39,7 @@ void check_limit_and_insert(Node& node, Body& body){
         //East Side
         if (y_body < y_min){
             //South East Side
-            if (node.ne == nullptr) {
+            if (node.se == nullptr) {
                 node.se = new Node;
                 node.se->x_lim = node.x_lim/2;
                 node.se->y_lim = node.y_lim/2;
