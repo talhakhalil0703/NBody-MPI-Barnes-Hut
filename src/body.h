@@ -2,7 +2,9 @@
 #define _BODY_H
 #include <iostream>
 
-struct body
+#define XLIM 4
+#define YLIM 4
+struct Body
 {
 	int index;
 	float x_pos;
@@ -12,6 +14,6 @@ struct body
 	float y_vel;
 };
 
-void print_body(body &b);
+void print_body(Body &b);
 
 #endif

@@ -1,6 +1,6 @@
 #include "io.h"
 
-std::vector<body> read_bodies_file(char *in_file)
+std::vector<Body> read_bodies_file(char *in_file)
 {
 
 	int number_of_bodies = 0;
@@ -10,12 +10,12 @@ std::vector<body> read_bodies_file(char *in_file)
 	// Get num vals
 	in >> number_of_bodies;
 
-	std::vector<body> bodies;
+	std::vector<Body> bodies;
 
 	// Read bodies vals
 	for (int i = 0; i < number_of_bodies; ++i)
 	{
-		body temp;
+		Body temp;
 		in >> temp.index;
 		in >> temp.x_pos;
 		in >> temp.y_pos;

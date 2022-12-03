@@ -3,6 +3,7 @@
 #include "io.h"
 #include "argparse.h"
 #include "body.h"
+#include "quadtree.h"
 
 // Visual Stuff could be moved?
 
@@ -15,7 +16,6 @@
 #include <GL/glut.h>
 
 using namespace std;
-
 void draw_2d_particle(double x_window, double y_window, double radius, float *colors) {
     int k = 0;
     float angle = 0.0f;
@@ -30,16 +30,47 @@ void draw_2d_particle(double x_window, double y_window, double radius, float *co
     glEnd();
 }
 
-void draw_bodies(vector<body> &bodies){
+void drawOctreeBounds2D(Node &node) {
+    float x_pos =  2*node.x_pos -1;
+    float y_pos =  2*node.y_pos -1;
+
+
+    glBegin(GL_LINES);
+    // set the color of lines to be white
+    glColor3f(1.0f, 1.0f, 1.0f);
+    // specify the start point's coordinates
+    glVertex2f(x_pos-node.x_lim*2, y_pos );
+    // specify the end point's coordinates
+    glVertex2f(x_pos+node.x_lim*2, y_pos);
+    // do the same for verticle line
+    glVertex2f(x_pos, y_pos - node.y_lim*2);
+    glVertex2f(x_pos, y_pos + node.y_lim*2);
+    glEnd();
+}
+
+void draw_lines (Node &node) {
+    if (node.internal){
+    drawOctreeBounds2D(node);
+    }
+    if (node.nw != nullptr)
+        draw_lines(*node.nw);
+    if (node.ne != nullptr)
+        draw_lines(*node.ne);
+    if (node.se != nullptr)
+        draw_lines(*node.se);
+    if (node.sw != nullptr)
+        draw_lines(*node.sw);
+}
+
+void draw_bodies(vector<Body> &bodies){
     for (const auto& body: bodies){
         double x_win, y_win = 0;
-        x_win = 2*body.x_pos/4-1;
-        y_win = 2*body.y_pos/4-1;
+        x_win = 2*body.x_pos/XLIM-1;
+        y_win = 2*body.y_pos/YLIM-1;
         //printf("id: %d, x_win: %f, y_win: %f\n", body.index, x_win, y_win);
-        float colors[3] = {0.5, 0.5, 0.5};
-        draw_2d_particle(x_win, y_win, 0.02*body.mass, colors);
+        float colors[3] = {0.9, 0.9, 0.9};
+        draw_2d_particle(x_win, y_win, 0.004, colors);
     }
-
 }
 
 int main(int argc, char **argv)
@@ -73,7 +104,7 @@ int main(int argc, char **argv)
     struct options_t opts;
     get_opts(argc, argv, &opts);
     print_opts(&opts);
-    vector<body> bodies = read_bodies_file(opts.in_file);
+    vector<Body> bodies = read_bodies_file(opts.in_file);
     for (uint i = 0; i < bodies.size(); i++)
     {
         print_body(bodies[i]);
@@ -84,9 +115,11 @@ int main(int argc, char **argv)
         while (!glfwWindowShouldClose(window))
         {
             /* Render here */
-            glClearColor(0.9, 0.1, 0.55f, 1.0f);
+            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             draw_bodies(bodies);
+            auto root = create_quadtree(bodies);
+            draw_lines(root);
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
             /* Poll for and process events */
