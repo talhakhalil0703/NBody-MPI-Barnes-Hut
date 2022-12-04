@@ -31,20 +31,21 @@ void draw_2d_particle(double x_window, double y_window, double radius, float *co
 }
 
 void drawOctreeBounds2D(Node &node) {
-    float x_pos =  2*node.x_pos -1;
-    float y_pos =  2*node.y_pos -1;
-
+    float x_win = 2*node.x_pos/XLIM-1;
+    float y_win = 2*node.y_pos/YLIM-1;
+    float x_lim = node.x_lim/2;
+    float y_lim = node.y_lim/2;
 
     glBegin(GL_LINES);
     // set the color of lines to be white
     glColor3f(1.0f, 1.0f, 1.0f);
     // specify the start point's coordinates
-    glVertex2f(x_pos-node.x_lim*2, y_pos );
+    glVertex2f(x_win+x_lim, y_win );
     // specify the end point's coordinates
-    glVertex2f(x_pos+node.x_lim*2, y_pos);
+    glVertex2f(x_win-x_lim, y_win);
     // do the same for verticle line
-    glVertex2f(x_pos, y_pos - node.y_lim*2);
-    glVertex2f(x_pos, y_pos + node.y_lim*2);
+    glVertex2f(x_win, y_win + y_lim);
+    glVertex2f(x_win, y_win - y_lim);
     glEnd();
 }
 
@@ -124,6 +125,12 @@ int main(int argc, char **argv)
             glfwSwapBuffers(window);
             /* Poll for and process events */
             glfwPollEvents();
+            // float total_mass = 0;
+            // for (uint i =0; i < bodies.size(); i++){
+            //     total_mass += bodies[i].mass;
+            // }
+            // printf("total mass: %f, node total mass: %f\n",total_mass, root.total_mass);
+
         }
     }
 }

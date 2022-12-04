@@ -4,6 +4,10 @@
 
 #define XLIM 4
 #define YLIM 4
+#define G 0.0001
+#define rlimit 0.03
+#define dt 0.005
+
 struct Body
 {
 	int index;

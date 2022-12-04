@@ -7,7 +7,7 @@
             "program": "${workspaceFolder}/bin/nbody_debug",
             "args": [
                 "-i",
-                "input/nb-100.txt",
+                "input/nb-10.txt",
                 "-o",
                 "test.out",
                 "-s",

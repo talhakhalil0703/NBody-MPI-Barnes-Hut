@@ -18,12 +18,12 @@ struct Node {
 };
 
 
-void check_limit_and_insert(Node& node, Body& body);
+void _check_limit_and_insert(Node& node, Body& body);
 
-void insert_into_external_node(Node& node, Body& body);
+void _insert_into_external_node(Node& node, Body& body);
 
-void insert_into_internal_node(Node& node, Body& body);
+void _insert_into_internal_node(Node& node, Body& body);
 
-void insert_into_node(Node& node, Body& body);
+void _insert_into_node(Node& node, Body& body);
 
 Node create_quadtree(std::vector<Body> &bodies);
