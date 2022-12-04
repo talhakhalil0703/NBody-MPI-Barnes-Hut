@@ -15,6 +15,10 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
+
+float THETA;
+float dt;
+
 using namespace std;
 void draw_2d_particle(double x_window, double y_window, double radius, float *colors) {
     int k = 0;
@@ -33,8 +37,8 @@ void draw_2d_particle(double x_window, double y_window, double radius, float *co
 void drawOctreeBounds2D(Node &node) {
     float x_win = 2*node.x_pos/XLIM-1;
     float y_win = 2*node.y_pos/YLIM-1;
-    float x_lim = node.x_lim/2;
-    float y_lim = node.y_lim/2;
+    float x_lim = node.x_lim*2/XLIM; // TODO:Not entirely sure if this is correct if lim change
+    float y_lim = node.y_lim*2/YLIM;
 
     glBegin(GL_LINES);
     // set the color of lines to be white
@@ -105,11 +109,14 @@ int main(int argc, char **argv)
     struct options_t opts;
     get_opts(argc, argv, &opts);
     print_opts(&opts);
+    THETA = opts.threshold;
+    dt = opts.timestep;
     vector<Body> bodies = read_bodies_file(opts.in_file);
-    for (uint i = 0; i < bodies.size(); i++)
-    {
-        print_body(bodies[i]);
-    }
+
+    // for (uint i = 0; i < bodies.size(); i++)
+    // {
+    //     print_body(bodies[i]);
+    // }
 
     if (opts.visuals)
     {
@@ -118,19 +125,18 @@ int main(int argc, char **argv)
             /* Render here */
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
-            draw_bodies(bodies);
             auto root = create_quadtree(bodies);
-            draw_lines(root);
+            printf("Tree created\n");
+            if (!root.empty) {
+                calculate_forces_within_quadtree(root, bodies);
+                printf("Forced Calculated\n");
+                draw_bodies(bodies);
+                draw_lines(root);
+                glfwSwapBuffers(window);
+            }
             /* Swap front and back buffers */
-            glfwSwapBuffers(window);
             /* Poll for and process events */
             glfwPollEvents();
-            // float total_mass = 0;
-            // for (uint i =0; i < bodies.size(); i++){
-            //     total_mass += bodies[i].mass;
-            // }
-            // printf("total mass: %f, node total mass: %f\n",total_mass, root.total_mass);
-
         }
     }
 }

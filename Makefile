@@ -19,4 +19,4 @@ clean:
 	rm -f $(EXEC)
 
 test:
-	./bin/nbody -i input/nb-10.txt -o test.out -s 10 -t 0.05 -d 123 -V
+	./bin/nbody -i input/nb-10.txt -o test.out -s 10 -t 0.03 -d 0.005 -V

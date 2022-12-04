@@ -5,19 +5,23 @@
 #define XLIM 4
 #define YLIM 4
 #define G 0.0001
-#define rlimit 0.03
-#define dt 0.005
+
+extern float THETA;
+extern float dt;
 
 struct Body
 {
-	int index;
-	float x_pos;
-	float y_pos;
-	float mass;
-	float x_vel;
-	float y_vel;
+	int index = 0;
+	float x_pos = 0;
+	float y_pos = 0;
+	float mass = 0;
+	float x_vel = 0;
+	float y_vel = 0;
+    float x_force = 0;
+    float y_force = 0;
 };
 
 void print_body(Body &b);
+void update_pos_and_vel(Body &b);
 
 #endif
