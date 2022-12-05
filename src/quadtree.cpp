@@ -44,8 +44,8 @@ void _update_mass(Node &node)
     }
 
     node.total_mass = total_mass;
-    node.center_of_mass_x = center_of_mass_x/total_mass;
-    node.center_of_mass_y = center_of_mass_y/total_mass;
+    node.center_of_mass_x = center_of_mass_x / total_mass;
+    node.center_of_mass_y = center_of_mass_y / total_mass;
 }
 
 /// @brief Check the limits of where the body should be placed and if the quadrant does not exist
@@ -174,24 +174,24 @@ void _insert_into_node(Node &node, Body &body)
     }
 }
 
-
 /// @brief Given a vector of bodies create a quadtree
 /// @param bodies vector of bodies
 /// @return root Node of the quadtree
 Node create_quadtree(std::vector<Body> &bodies)
 {
     Node root;
-    root.x_pos = XLIM/2;
-    root.y_pos = YLIM/2;
-    root.x_lim = XLIM/2;
-    root.y_lim = YLIM/2;
+    root.x_pos = XLIM / 2;
+    root.y_pos = YLIM / 2;
+    root.x_lim = XLIM / 2;
+    root.y_lim = YLIM / 2;
 
     bool has_bodies = false;
     for (uint i = 0; i < bodies.size(); i++)
     {
-        if (bodies[i].mass != -1) {
-        _insert_into_node(root, bodies[i]);
-        has_bodies = true;
+        if (bodies[i].mass != -1)
+        {
+            _insert_into_node(root, bodies[i]);
+            has_bodies = true;
         }
     }
 
@@ -199,38 +199,50 @@ Node create_quadtree(std::vector<Body> &bodies)
     return root;
 }
 
-
-void _calculate_force_on_body(Node node, Body &body){
-    if (node.internal == false && node.body->index != body.index){
-        float dx = body.x_pos-node.center_of_mass_x;
-        float dy = body.y_pos-node.center_of_mass_y;
-        float d = sqrt(dx*dx + dy*dy);
-        if (d < THETA) d = THETA;
+void _calculate_force_on_body(Node node, Body &body)
+{
+    if (node.internal == false && node.body->index != body.index)
+    {
+        float dx = body.x_pos - node.center_of_mass_x;
+        float dy = body.y_pos - node.center_of_mass_y;
+        float d = sqrt(dx * dx + dy * dy);
+        if (d < THETA)
+            d = THETA;
         // Calculate force of this node onto the body
         // This node is a singular body
         // Add this net force onto b's net force
         float d3 = pow(d, 3);
-        body.x_force += G*node.total_mass*body.mass*(dx)/d3;
-        body.y_force += G*node.total_mass*body.mass*(dy)/d3;
-    } else {
+        body.x_force += G * node.total_mass * body.mass * (dx) / d3;
+        body.y_force += G * node.total_mass * body.mass * (dy) / d3;
+    }
+    else
+    {
         // Can we treat this node as a singular body
         // Check if s/d < theta if so treat as a singular node
-        float dx = body.x_pos-node.center_of_mass_x;
-        float dy = body.y_pos-node.center_of_mass_y;
-        float d = sqrt(dx*dx + dy*dy);
-        if (d < THETA) d = THETA;
+        float dx = body.x_pos - node.center_of_mass_x;
+        float dy = body.y_pos - node.center_of_mass_y;
+        float d = sqrt(dx * dx + dy * dy);
+        if (d < THETA)
+            d = THETA;
         // s in this case can be thought of the xlim or ylim
-        if (node.x_lim/d < THETA){ // s/d < theta
+        if (node.x_lim / d < THETA)
+        {                         // s/d < theta
             float d3 = pow(d, 3); // Power of 3, SQRT 2
-            body.x_force += G*node.total_mass*body.mass*(dx)/d3;
-            body.y_force += G*node.total_mass*body.mass*(dy)/d3;
-        } else {
+            body.x_force += G * node.total_mass * body.mass * (dx) / d3;
+            body.y_force += G * node.total_mass * body.mass * (dy) / d3;
+        }
+        else
+        {
             // Recurse in each node for the body
-            //recurse
-            if (node.nw != nullptr) _calculate_force_on_body(*node.nw, body);
-            if (node.ne != nullptr) _calculate_force_on_body(*node.ne, body);
-            if (node.se != nullptr) _calculate_force_on_body(*node.se, body);
-            if (node.sw != nullptr) _calculate_force_on_body(*node.sw, body);
+            // recurse
+            if (node.nw != nullptr)
+                _calculate_force_on_body(*node.nw, body);
+            if (node.ne != nullptr)
+                _calculate_force_on_body(*node.ne, body);
+            if (node.se != nullptr)
+                _calculate_force_on_body(*node.se, body);
+            if (node.sw != nullptr)
+                _calculate_force_on_body(*node.sw, body);
         }
     }
 }
@@ -238,12 +250,15 @@ void _calculate_force_on_body(Node node, Body &body){
 /// @brief Calculate the forces within a quadtree
 /// @param node the root node
 /// @param bodies Bodies for which to calculate the forces for
-void calculate_forces_within_quadtree(Node root, std::vector<Body> &bodies){
-    for (auto & body: bodies){
-        if (body.mass == -1) continue;
+void calculate_forces_within_quadtree(Node root, std::vector<Body> &bodies)
+{
+    for (auto &body : bodies)
+    {
+        if (body.mass == -1)
+            continue;
         // printf("index: %d x_pos:%f y_pos:%f\n", body.index, body.x_pos, body.y_pos);
         _calculate_force_on_body(root, body);
-        //Update position and velocity for the body
+        // Update position and velocity for the body
         update_pos_and_vel(body);
     }
 }

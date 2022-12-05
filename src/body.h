@@ -11,12 +11,12 @@ extern float dt;
 
 struct Body
 {
-	int index = 0;
-	float x_pos = 0;
-	float y_pos = 0;
-	float mass = 0;
-	float x_vel = 0;
-	float y_vel = 0;
+    int index = 0;
+    float x_pos = 0;
+    float y_pos = 0;
+    float mass = 0;
+    float x_vel = 0;
+    float y_vel = 0;
     float x_force = 0;
     float y_force = 0;
 };

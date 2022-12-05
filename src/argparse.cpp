@@ -24,8 +24,7 @@ void get_opts(int argc,
         {"steps", required_argument, NULL, 's'},
         {"threshold", required_argument, NULL, 't'},
         {"timestep", required_argument, NULL, 'd'},
-        {"visuals", optional_argument, NULL, 'V'}
-    };
+        {"visuals", optional_argument, NULL, 'V'}};
 
     int ind, c;
     while ((c = getopt_long(argc, argv, "i:o:s:t:d:V", l_opts, &ind)) != -1)
@@ -59,8 +58,9 @@ void get_opts(int argc,
     }
 }
 
-void print_opts(struct options_t * opts){
-    std::cout << "Options: " <<std::endl;
+void print_opts(struct options_t *opts)
+{
+    std::cout << "Options: " << std::endl;
     std::cout << "\t in: " << opts->in_file << std::endl;
     std::cout << "\t out: " << opts->out_file << std::endl;
     std::cout << "\t steps: " << opts->steps << std::endl;

@@ -15,47 +15,51 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
-
 float THETA;
 float dt;
 
 using namespace std;
-void draw_2d_particle(double x_window, double y_window, double radius, float *colors) {
+void draw_2d_particle(double x_window, double y_window, double radius, float *colors)
+{
     int k = 0;
     float angle = 0.0f;
     glBegin(GL_TRIANGLE_FAN);
     glColor3f(colors[0], colors[1], colors[2]);
     glVertex2f(x_window, y_window);
-    for(k=0;k<20;k++){
-        angle=(float) (k)/19*2*3.141592;
-        glVertex2f(x_window+radius*cos(angle),
-           y_window+radius*sin(angle));
+    for (k = 0; k < 20; k++)
+    {
+        angle = (float)(k) / 19 * 2 * 3.141592;
+        glVertex2f(x_window + radius * cos(angle),
+                   y_window + radius * sin(angle));
     }
     glEnd();
 }
 
-void drawOctreeBounds2D(Node &node) {
-    float x_win = 2*node.x_pos/XLIM-1;
-    float y_win = 2*node.y_pos/YLIM-1;
-    float x_lim = node.x_lim*2/XLIM; // TODO:Not entirely sure if this is correct if lim change
-    float y_lim = node.y_lim*2/YLIM;
+void drawOctreeBounds2D(Node &node)
+{
+    float x_win = 2 * node.x_pos / XLIM - 1;
+    float y_win = 2 * node.y_pos / YLIM - 1;
+    float x_lim = node.x_lim * 2 / XLIM; // TODO:Not entirely sure if this is correct if lim change
+    float y_lim = node.y_lim * 2 / YLIM;
 
     glBegin(GL_LINES);
     // set the color of lines to be white
     glColor3f(1.0f, 1.0f, 1.0f);
     // specify the start point's coordinates
-    glVertex2f(x_win+x_lim, y_win );
+    glVertex2f(x_win + x_lim, y_win);
     // specify the end point's coordinates
-    glVertex2f(x_win-x_lim, y_win);
+    glVertex2f(x_win - x_lim, y_win);
     // do the same for verticle line
     glVertex2f(x_win, y_win + y_lim);
     glVertex2f(x_win, y_win - y_lim);
     glEnd();
 }
 
-void draw_lines (Node &node) {
-    if (node.internal){
-    drawOctreeBounds2D(node);
+void draw_lines(Node &node)
+{
+    if (node.internal)
+    {
+        drawOctreeBounds2D(node);
     }
     if (node.nw != nullptr)
         draw_lines(*node.nw);
@@ -67,12 +71,14 @@ void draw_lines (Node &node) {
         draw_lines(*node.sw);
 }
 
-void draw_bodies(vector<Body> &bodies){
-    for (const auto& body: bodies){
+void draw_bodies(vector<Body> &bodies)
+{
+    for (const auto &body : bodies)
+    {
         double x_win, y_win = 0;
-        x_win = 2*body.x_pos/XLIM-1;
-        y_win = 2*body.y_pos/YLIM-1;
-        //printf("id: %d, x_win: %f, y_win: %f\n", body.index, x_win, y_win);
+        x_win = 2 * body.x_pos / XLIM - 1;
+        y_win = 2 * body.y_pos / YLIM - 1;
+        // printf("id: %d, x_win: %f, y_win: %f\n", body.index, x_win, y_win);
         float colors[3] = {0.9, 0.9, 0.9};
         draw_2d_particle(x_win, y_win, 0.004, colors);
     }
@@ -127,7 +133,8 @@ int main(int argc, char **argv)
             glClear(GL_COLOR_BUFFER_BIT);
             auto root = create_quadtree(bodies);
             printf("Tree created\n");
-            if (!root.empty) {
+            if (!root.empty)
+            {
                 calculate_forces_within_quadtree(root, bodies);
                 printf("Forced Calculated\n");
                 draw_bodies(bodies);

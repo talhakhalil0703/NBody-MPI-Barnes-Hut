@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <iostream>
 
-struct options_t {
+struct options_t
+{
     char *in_file;
     char *out_file;
     int steps;
@@ -15,5 +16,5 @@ struct options_t {
 };
 
 void get_opts(int argc, char **argv, struct options_t *opts);
-void print_opts(struct options_t * opts);
+void print_opts(struct options_t *opts);
 #endif
