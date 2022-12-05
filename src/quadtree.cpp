@@ -177,7 +177,7 @@ void _insert_into_node(Node &node, Body &body)
 /// @brief Given a vector of bodies create a quadtree
 /// @param bodies vector of bodies
 /// @return root Node of the quadtree
-Node create_quadtree(std::vector<Body> &bodies)
+Node create_quadtree(Body * bodies, uint count)
 {
     Node root;
     root.x_pos = XLIM / 2;
@@ -186,7 +186,7 @@ Node create_quadtree(std::vector<Body> &bodies)
     root.y_lim = YLIM / 2;
 
     bool has_bodies = false;
-    for (uint i = 0; i < bodies.size(); i++)
+    for (uint i = 0; i < count; i++)
     {
         if (bodies[i].mass != -1)
         {
@@ -248,17 +248,12 @@ void _calculate_force_on_body(Node node, Body &body)
 }
 
 /// @brief Calculate the forces within a quadtree
-/// @param node the root node
-/// @param bodies Bodies for which to calculate the forces for
-void calculate_forces_within_quadtree(Node root, std::vector<Body> &bodies)
+/// @param node the root node, to use for force calculations
+/// @param body Body for which to calculate updated pos vel
+void calculate_pos_vel_for_body(Node root, Body &body)
 {
-    for (auto &body : bodies)
-    {
-        if (body.mass == -1)
-            continue;
-        // printf("index: %d x_pos:%f y_pos:%f\n", body.index, body.x_pos, body.y_pos);
-        _calculate_force_on_body(root, body);
-        // Update position and velocity for the body
-        update_pos_and_vel(body);
-    }
+    if (body.mass == -1) return;
+    _calculate_force_on_body(root, body);
+    // Update position and velocity for the body
+    update_pos_and_vel(body);
 }

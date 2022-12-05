@@ -1,28 +1,24 @@
 #include "io.h"
 
-std::vector<Body> read_bodies_file(char *in_file)
+Body * read_bodies_file(char *in_file, int & count)
 {
-
-    int number_of_bodies = 0;
+    count = 0;
     // Open file
     std::ifstream in;
     in.open(in_file);
     // Get num vals
-    in >> number_of_bodies;
+    in >> count;
 
-    std::vector<Body> bodies;
-
+    Body * bodies = (Body*) malloc(count*sizeof(Body));
     // Read bodies vals
-    for (int i = 0; i < number_of_bodies; ++i)
+    for (int i = 0; i < count; ++i)
     {
-        Body temp;
-        in >> temp.index;
-        in >> temp.x_pos;
-        in >> temp.y_pos;
-        in >> temp.mass;
-        in >> temp.x_vel;
-        in >> temp.y_vel;
-        bodies.push_back(temp);
+        in >> bodies[i].index;
+        in >> bodies[i].x_pos;
+        in >> bodies[i].y_pos;
+        in >> bodies[i].mass;
+        in >> bodies[i].x_vel;
+        in >> bodies[i].y_vel;
     }
 
     return bodies;

@@ -25,6 +25,6 @@ void update_pos_and_vel(Body &b)
     if (b.x_pos < 0 || b.x_pos > 4 || b.y_pos < 0 || b.y_pos > 4)
     {
         b.mass = -1;
-        printf("body index: %d out of bounds\n", b.index);
+        // printf("body index: %d out of bounds\n", b.index);
     }
 }

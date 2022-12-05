@@ -29,6 +29,6 @@ void _insert_into_node(Node &node, Body &body);
 
 void _calculate_force_on_body(Node node, Body &body);
 
-Node create_quadtree(std::vector<Body> &bodies);
+Node create_quadtree(Body * bodies, uint count);
 
-void calculate_forces_within_quadtree(Node root, std::vector<Body> &bodies);
+void calculate_pos_vel_for_body(Node root, Body &Body);

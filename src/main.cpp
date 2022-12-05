@@ -4,6 +4,7 @@
 #include "argparse.h"
 #include "body.h"
 #include "quadtree.h"
+#include "mpi.h"
 
 // Visual Stuff could be moved?
 
@@ -17,8 +18,47 @@
 
 float THETA;
 float dt;
+int steps;
+
 
 using namespace std;
+
+void create_mpi_body_datatype(MPI_Datatype &mystruct){
+    Body body;
+    int          blocklens[2];
+    MPI_Aint     indices[8];
+    MPI_Datatype old_types[2];
+
+    /* One value of each type */
+    blocklens[0] = 1;
+    blocklens[1] = 7;
+    /* The base types */
+    old_types[0] = MPI_INT;
+    old_types[1] = MPI_FLOAT;
+
+    /* The locations of each element */
+    MPI_Address( &body.index, &indices[0] );
+    MPI_Address( &body.x_pos, &indices[1] );
+    MPI_Address( &body.y_pos, &indices[2] );
+    MPI_Address( &body.mass, &indices[3] );
+    MPI_Address( &body.x_vel, &indices[4] );
+    MPI_Address( &body.y_vel, &indices[5] );
+    MPI_Address( &body.x_force, &indices[6] );
+    MPI_Address( &body.y_force, &indices[7] );
+
+    /* Make relative */
+    indices[1] = indices[1] - indices[0];
+    indices[2] = indices[2] - indices[0];
+    indices[3] = indices[3] - indices[0];
+    indices[4] = indices[4] - indices[0];
+    indices[5] = indices[5] - indices[0];
+    indices[6] = indices[6] - indices[0];
+    indices[7] = indices[7] - indices[0];
+    indices[0] = 0;
+    MPI_Type_struct( 2, blocklens, indices, old_types, &mystruct );
+    MPI_Type_commit( &mystruct );
+}
+
 void draw_2d_particle(double x_window, double y_window, double radius, float *colors)
 {
     int k = 0;
@@ -71,31 +111,20 @@ void draw_lines(Node &node)
         draw_lines(*node.sw);
 }
 
-void draw_bodies(vector<Body> &bodies)
+void draw_bodies(Body * body, int count)
 {
-    for (const auto &body : bodies)
+    for (int i = 0; i < count; i++)
     {
         double x_win, y_win = 0;
-        x_win = 2 * body.x_pos / XLIM - 1;
-        y_win = 2 * body.y_pos / YLIM - 1;
-        // printf("id: %d, x_win: %f, y_win: %f\n", body.index, x_win, y_win);
+        x_win = 2 * body[i].x_pos / XLIM - 1;
+        y_win = 2 * body[i].y_pos / YLIM - 1;
         float colors[3] = {0.9, 0.9, 0.9};
         draw_2d_particle(x_win, y_win, 0.004, colors);
     }
 }
 
-int main(int argc, char **argv)
-{
-    /* OpenGL window dims */
-    int width = 600, height = 600;
-    GLFWwindow *window;
-    if (!glfwInit())
-    {
-        fprintf(stderr, "Failed to initialize GLFW\n");
-        return -1;
-    }
-    // Open a window and create its OpenGL context
-    window = glfwCreateWindow(width, height, "Simulation", NULL, NULL);
+int setup_window(GLFWwindow * window){
+
     if (window == NULL)
     {
         fprintf(stderr, "Failed to open GLFW window.\n");
@@ -110,40 +139,120 @@ int main(int argc, char **argv)
     }
     // Ensure we can capture the escape key being pressed below
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    return 0;
+}
 
-    // Parse args
+int main(int argc, char **argv)
+{
+    int rank, size;
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank( MPI_COMM_WORLD, &rank);
+	MPI_Comm_size( MPI_COMM_WORLD, &size);
+    bool visuals = false;
+    GLFWwindow *window;
+    Body * bodies;
+    int tagno = 42;
+    int number_of_bodies;
+    MPI_Datatype MPI_Body_datatype;
+    MPI_Status status;
+
     struct options_t opts;
     get_opts(argc, argv, &opts);
     print_opts(&opts);
     THETA = opts.threshold;
     dt = opts.timestep;
-    vector<Body> bodies = read_bodies_file(opts.in_file);
+    steps = opts.steps;
+    visuals = opts.visuals;
 
-    // for (uint i = 0; i < bodies.size(); i++)
-    // {
-    //     print_body(bodies[i]);
-    // }
+    printf("Running %d\n", rank);
+    create_mpi_body_datatype(MPI_Body_datatype);
 
-    if (opts.visuals)
+    if (rank == 0){
+        /* OpenGL window dims */
+        int width = 600, height = 600;
+        if (!glfwInit())
+        {
+            fprintf(stderr, "Failed to initialize GLFW\n");
+            return -1;
+        }
+        // Open a window and create its OpenGL context
+        window = glfwCreateWindow(width, height, "Simulation", NULL, NULL);
+        int ret = setup_window(window);
+        if (ret == -1) return -1;
+        bodies = read_bodies_file(opts.in_file, number_of_bodies);
+        // for (int i =0; i < number_of_bodies; i++){
+        //     print_body(bodies[i]);
+        // }
+    }
+
+    MPI_Bcast( &number_of_bodies, 1, MPI_INT, 0, MPI_COMM_WORLD );
+
+    if (rank!=0){
+        bodies = (Body*) malloc(number_of_bodies*sizeof(Body));
+    }
+
+    // printf("rank:%d number_of_bodies %d\n", rank, number_of_bodies);
+    // Start of Loop?
+    for (int s =0; s< steps; s++){
+        if (rank == 0) printf("Next step!\n");
+        //Zero send bodies through
+        MPI_Bcast( bodies, number_of_bodies, MPI_Body_datatype, 0, MPI_COMM_WORLD );
+        // printf("Bodies %d!\n", rank);
+        //Before splitting the work each process must first create the tree
+        auto root = create_quadtree(bodies, number_of_bodies);
+
+        //Bodies have now been recieved by each process
+        if (!root.empty){
+            if (rank != 0){
+                    for (int i = rank-1; i < number_of_bodies; i+= (size-1)){
+                        calculate_pos_vel_for_body(root, bodies[i]);
+                        MPI_Send(&bodies[i], 1, MPI_Body_datatype, 0, tagno, MPI_COMM_WORLD);
+                    }
+
+                //work to perform tells us how big our chunk is
+                // if remaining work is not ran
+            } else { // rank == 0, Is main thread
+                Body temp;
+                //Handle Receiving bodies with new data, match with index to know where they belong
+                for (int i =0; i < number_of_bodies; i++){
+                    MPI_Recv(&temp, 1, MPI_Body_datatype, MPI_ANY_SOURCE, tagno, MPI_COMM_WORLD, &status);
+                    bodies[temp.index].index = temp.index;
+                    bodies[temp.index].x_pos = temp.x_pos;
+                    bodies[temp.index].y_pos = temp.y_pos;
+                    bodies[temp.index].mass = temp.mass;
+                    bodies[temp.index].x_vel = temp.x_vel;
+                    bodies[temp.index].y_vel = temp.y_vel;
+                }
+                if (visuals){
+                    if (glfwWindowShouldClose(window)) break;
+                    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+                    glClear(GL_COLOR_BUFFER_BIT);
+                    if (!root.empty)
+                    {
+                        draw_bodies(bodies, number_of_bodies);
+                        draw_lines(root);
+                        glfwSwapBuffers(window);
+                    }
+                    /* Swap front and back buffers */
+                    /* Poll for and process events */
+                    glfwPollEvents();
+                }
+            }
+        }
+
+    }
+    // Struct to send can contain this data.
+    if (visuals && rank == 0)
     {
         while (!glfwWindowShouldClose(window))
         {
-            /* Render here */
-            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-            auto root = create_quadtree(bodies);
-            printf("Tree created\n");
-            if (!root.empty)
-            {
-                calculate_forces_within_quadtree(root, bodies);
-                printf("Forced Calculated\n");
-                draw_bodies(bodies);
-                draw_lines(root);
-                glfwSwapBuffers(window);
-            }
             /* Swap front and back buffers */
             /* Poll for and process events */
             glfwPollEvents();
         }
     }
+
+    free(bodies);
+    MPI_Finalize();
+    return 0;
 }
