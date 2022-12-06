@@ -19,4 +19,4 @@ clean:
 	rm -f $(EXEC)
 
 test:
-	mpirun -np 12 ./bin/nbody -i input/nb-100.txt -o test.out -s 10000 -t 0.03 -d 0.05 -V
+	mpirun -np 12 ./bin/nbody -i input/nb-10.txt -o test.out -s 1000 -t 0.5 -d 0.005

@@ -24,16 +24,26 @@ Body * read_bodies_file(char *in_file, int & count)
     return bodies;
 }
 
-void write_file(struct options_t *args,
-                struct prefix_sum_args_t *opts)
+void write_file(char *out_file, Body * bodies, int count)
 {
     // Open file
     std::ofstream out;
-    out.open(args->out_file, std::ofstream::trunc);
+    out.open(out_file, std::ofstream::trunc);
+
+
+    out << count << std::endl;
+    out << std::scientific;
+
+    for (int i =0; i < count; i++){
+        out << bodies[i].index << "\t";
+        out << bodies[i].x_pos << "\t";
+        out << bodies[i].y_pos << "\t";
+        out << bodies[i].mass << "\t";
+        out << bodies[i].x_vel << "\t";
+        out << bodies[i].y_vel << std::endl;
+    }
 
     out.flush();
     out.close();
 
-    // Free memory
-    // free(opts->output_vals);
 }

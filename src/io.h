@@ -9,7 +9,7 @@
 
 Body * read_bodies_file(char *in_file, int &count);
 
-void write_file(struct options_t *args,
-                struct prefix_sum_args_t *opts);
+void write_file(char *out_file, Body * bodies, int count);
+
 
 #endif

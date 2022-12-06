@@ -158,7 +158,6 @@ int main(int argc, char **argv)
 
     struct options_t opts;
     get_opts(argc, argv, &opts);
-    print_opts(&opts);
     THETA = opts.threshold;
     dt = opts.timestep;
     steps = opts.steps;
@@ -168,6 +167,7 @@ int main(int argc, char **argv)
     create_mpi_body_datatype(MPI_Body_datatype);
 
     if (rank == 0){
+        print_opts(&opts);
         /* OpenGL window dims */
         int width = 600, height = 600;
         if (!glfwInit())
@@ -175,16 +175,19 @@ int main(int argc, char **argv)
             fprintf(stderr, "Failed to initialize GLFW\n");
             return -1;
         }
-        // Open a window and create its OpenGL context
-        window = glfwCreateWindow(width, height, "Simulation", NULL, NULL);
-        int ret = setup_window(window);
-        if (ret == -1) return -1;
+        if (visuals){
+            // Open a window and create its OpenGL context
+            window = glfwCreateWindow(width, height, "Simulation", NULL, NULL);
+            int ret = setup_window(window);
+            if (ret == -1) return -1;
+        }
         bodies = read_bodies_file(opts.in_file, number_of_bodies);
         // for (int i =0; i < number_of_bodies; i++){
         //     print_body(bodies[i]);
         // }
     }
 
+    double start = MPI_Wtime();
     MPI_Bcast( &number_of_bodies, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
     if (rank!=0){
@@ -194,7 +197,7 @@ int main(int argc, char **argv)
     // printf("rank:%d number_of_bodies %d\n", rank, number_of_bodies);
     // Start of Loop?
     for (int s =0; s< steps; s++){
-        if (rank == 0) printf("Next step!\n");
+        // if (rank == 0) printf("Next step!\n");
         //Zero send bodies through
         MPI_Bcast( bodies, number_of_bodies, MPI_Body_datatype, 0, MPI_COMM_WORLD );
         // printf("Bodies %d!\n", rank);
@@ -241,18 +244,23 @@ int main(int argc, char **argv)
         }
 
     }
-    // Struct to send can contain this data.
-    if (visuals && rank == 0)
-    {
-        while (!glfwWindowShouldClose(window))
+
+    if (rank == 0){
+        printf("Elapsed Time %f", MPI_Wtime() - start);
+        //Output data here.
+        write_file(opts.out_file, bodies, number_of_bodies);
+        if (visuals)
+        // Struct to send can contain this data.
         {
-            /* Swap front and back buffers */
-            /* Poll for and process events */
-            glfwPollEvents();
+            while (!glfwWindowShouldClose(window))
+            {
+                /* Swap front and back buffers */
+                /* Poll for and process events */
+                glfwPollEvents();
+            }
         }
     }
 
     free(bodies);
     MPI_Finalize();
-    return 0;
 }
