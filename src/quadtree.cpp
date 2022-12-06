@@ -206,8 +206,8 @@ void _calculate_force_on_body(Node node, Body &body)
         float dx = body.x_pos - node.center_of_mass_x;
         float dy = body.y_pos - node.center_of_mass_y;
         float d = sqrt(dx * dx + dy * dy);
-        if (d < THETA)
-            d = THETA;
+        if (d < rlimit)
+            d = rlimit;
         // Calculate force of this node onto the body
         // This node is a singular body
         // Add this net force onto b's net force
@@ -222,8 +222,8 @@ void _calculate_force_on_body(Node node, Body &body)
         float dx = body.x_pos - node.center_of_mass_x;
         float dy = body.y_pos - node.center_of_mass_y;
         float d = sqrt(dx * dx + dy * dy);
-        if (d < THETA)
-            d = THETA;
+        if (d < rlimit)
+            d = rlimit;
         // s in this case can be thought of the xlim or ylim
         if (node.x_lim / d < THETA)
         {                         // s/d < theta
