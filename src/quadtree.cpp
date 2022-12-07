@@ -253,6 +253,7 @@ void _calculate_force_on_body(Node node, Body &body)
 void calculate_pos_vel_for_body(Node root, Body &body)
 {
     if (body.mass == -1) return;
+    // Only uses node data to calculate stuff for other bodies
     _calculate_force_on_body(root, body);
     // Update position and velocity for the body
     update_pos_and_vel(body);

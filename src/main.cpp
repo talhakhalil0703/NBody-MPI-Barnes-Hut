@@ -59,7 +59,7 @@ void create_mpi_body_datatype(MPI_Datatype &mystruct){
     MPI_Type_commit( &mystruct );
 }
 
-void draw_2d_particle(double x_window, double y_window, double radius, float *colors)
+void draw_2d_particle(float x_window, float y_window, float radius, float *colors)
 {
     int k = 0;
     float angle = 0.0f;
@@ -115,7 +115,7 @@ void draw_bodies(Body * body, int count)
 {
     for (int i = 0; i < count; i++)
     {
-        double x_win, y_win = 0;
+        float x_win, y_win = 0;
         x_win = 2 * body[i].x_pos / XLIM - 1;
         y_win = 2 * body[i].y_pos / YLIM - 1;
         float colors[3] = {0.9, 0.9, 0.9};
@@ -187,62 +187,74 @@ int main(int argc, char **argv)
         // }
     }
 
-    double start = MPI_Wtime();
+    float start = MPI_Wtime();
     MPI_Bcast( &number_of_bodies, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
     if (rank!=0){
         bodies = (Body*) malloc(number_of_bodies*sizeof(Body));
     }
 
-    // printf("rank:%d number_of_bodies %d\n", rank, number_of_bodies);
-    // Start of Loop?
-    for (int s =0; s< steps; s++){
-        // if (rank == 0) printf("Next step!\n");
-        //Zero send bodies through
-        MPI_Bcast( bodies, number_of_bodies, MPI_Body_datatype, 0, MPI_COMM_WORLD );
-        // printf("Bodies %d!\n", rank);
-        //Before splitting the work each process must first create the tree
-        auto root = create_quadtree(bodies, number_of_bodies);
+    if(size > 1){
+        // printf("rank:%d number_of_bodies %d\n", rank, number_of_bodies);
+        // Start of Loop?
+        for (int s =0; s< steps; s++){
+            // if (rank == 0) printf("Next step!\n");
+            //Zero send bodies through
+            MPI_Bcast( bodies, number_of_bodies, MPI_Body_datatype, 0, MPI_COMM_WORLD );
+            // printf("Bodies %d!\n", rank);
+            //Before splitting the work each process must first create the tree
+            auto root = create_quadtree(bodies, number_of_bodies);
 
-        //Bodies have now been recieved by each process
-        if (!root.empty){
-            if (rank != 0){
-                    for (int i = rank-1; i < number_of_bodies; i+= (size-1)){
-                        calculate_pos_vel_for_body(root, bodies[i]);
-                        MPI_Send(&bodies[i], 1, MPI_Body_datatype, 0, tagno, MPI_COMM_WORLD);
-                    }
+            //Bodies have now been recieved by each process
+            if (!root.empty){
+                if (rank != 0){
+                        for (int i = rank-1; i < number_of_bodies; i+= (size-1)){
+                            calculate_pos_vel_for_body(root, bodies[i]);
+                            MPI_Send(&bodies[i], 1, MPI_Body_datatype, 0, tagno, MPI_COMM_WORLD);
+                        }
 
-                //work to perform tells us how big our chunk is
-                // if remaining work is not ran
-            } else { // rank == 0, Is main thread
-                Body temp;
-                //Handle Receiving bodies with new data, match with index to know where they belong
-                for (int i =0; i < number_of_bodies; i++){
-                    MPI_Recv(&temp, 1, MPI_Body_datatype, MPI_ANY_SOURCE, tagno, MPI_COMM_WORLD, &status);
-                    bodies[temp.index].index = temp.index;
-                    bodies[temp.index].x_pos = temp.x_pos;
-                    bodies[temp.index].y_pos = temp.y_pos;
-                    bodies[temp.index].mass = temp.mass;
-                    bodies[temp.index].x_vel = temp.x_vel;
-                    bodies[temp.index].y_vel = temp.y_vel;
-                }
-                if (visuals){
-                    if (glfwWindowShouldClose(window)) break;
-                    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-                    glClear(GL_COLOR_BUFFER_BIT);
-                    if (!root.empty)
-                    {
-                        draw_bodies(bodies, number_of_bodies);
-                        draw_lines(root);
-                        glfwSwapBuffers(window);
+                    //work to perform tells us how big our chunk is
+                    // if remaining work is not ran
+                } else { // rank == 0, Is main thread
+                    Body temp;
+                    //Handle Receiving bodies with new data, match with index to know where they belong
+                    for (int i =0; i < number_of_bodies; i++){
+                        MPI_Recv(&temp, 1, MPI_Body_datatype, MPI_ANY_SOURCE, tagno, MPI_COMM_WORLD, &status);
+                        bodies[temp.index].index = temp.index;
+                        bodies[temp.index].x_pos = temp.x_pos;
+                        bodies[temp.index].y_pos = temp.y_pos;
+                        bodies[temp.index].mass = temp.mass;
+                        bodies[temp.index].x_vel = temp.x_vel;
+                        bodies[temp.index].y_vel = temp.y_vel;
                     }
-                    /* Swap front and back buffers */
-                    /* Poll for and process events */
-                    glfwPollEvents();
+                    if (visuals){
+                        if (glfwWindowShouldClose(window)) break;
+                        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+                        glClear(GL_COLOR_BUFFER_BIT);
+                        if (!root.empty)
+                        {
+                            draw_bodies(bodies, number_of_bodies);
+                            draw_lines(root);
+                            glfwSwapBuffers(window);
+                        }
+                        /* Swap front and back buffers */
+                        /* Poll for and process events */
+                        glfwPollEvents();
+                    }
                 }
             }
-        }
 
+        }
+    }else {
+        printf("Running Sequentially\n");
+         for (int s = 0; s < steps; s++){
+            auto root = create_quadtree(bodies, number_of_bodies);
+            if (!root.empty){
+                for (int i = 0; i < number_of_bodies; i++){
+                    calculate_pos_vel_for_body(root, bodies[i]);
+                }
+            }
+         }
     }
 
     if (rank == 0){

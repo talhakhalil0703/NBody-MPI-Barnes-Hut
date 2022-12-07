@@ -10,8 +10,8 @@ void get_opts(int argc,
         std::cout << "\t--in or -i <file_path>" << std::endl;
         std::cout << "\t--out or -o <file_path>" << std::endl;
         std::cout << "\t--steps or -s <number of iterations as an int>" << std::endl;
-        std::cout << "\t--theta or -t <threshold for MAC as a double>" << std::endl;
-        std::cout << "\t--timestep or -d <timestep as a double>" << std::endl;
+        std::cout << "\t--theta or -t <threshold for MAC as a float>" << std::endl;
+        std::cout << "\t--timestep or -d <timestep as a float>" << std::endl;
         std::cout << "\t[Optional] --visuals or -V" << std::endl;
         exit(0);
     }
