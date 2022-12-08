@@ -1,10 +1,10 @@
 CC = mpicxx
 SRCS = ./src/*.cpp
 INC = ./src/
-OPTS =  -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lGLEW -std=c++17 -Wall -lpthread
+OPTS =  -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lGLEW -std=c++17
 
-EXEC = bin/nbody
-EXEC_DEBUG = bin/nbody_debug
+EXEC = nbody
+EXEC_DEBUG = nbody_debug
 
 all: clean compile test
 debug: compile_debug
@@ -19,4 +19,6 @@ clean:
 	rm -f $(EXEC)
 
 test:
-	mpirun -np 6 ./bin/nbody -i input/nb-10.txt -o test.out -s 1000 -t 0.5 -d 0.005
+	./nbody -i input/nb-10.txt -o test.out -s 1000 -t 0.5 -d 0.005
+v:
+	./nbody -i input/nb-10.txt -o test.out -s 1000 -t 0.5 -d 0.005 -V

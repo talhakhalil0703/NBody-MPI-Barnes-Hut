@@ -19,6 +19,8 @@ Body * read_bodies_file(char *in_file, int & count)
         in >> bodies[i].mass;
         in >> bodies[i].x_vel;
         in >> bodies[i].y_vel;
+        bodies[i].x_force = 0;
+        bodies[i].y_force = 0;
     }
 
     return bodies;

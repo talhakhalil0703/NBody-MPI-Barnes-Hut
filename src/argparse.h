@@ -10,8 +10,8 @@ struct options_t
     char *in_file;
     char *out_file;
     int steps;
-    float threshold;
-    float timestep;
+    double threshold;
+    double timestep;
     bool visuals;
 };
 
