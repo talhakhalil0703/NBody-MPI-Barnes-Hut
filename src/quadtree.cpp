@@ -171,7 +171,7 @@ void _insert_into_external_node(Node *node, Body *body)
 
     _subdivide_and_insert(node, node->body);
     _subdivide_and_insert(node, body);
-    _update_mass(node);
+    // _update_mass(node);
 }
 
 /// @brief inserts a body into an internal node, an internal node is one that represents a collection of bodies
@@ -185,7 +185,7 @@ void _insert_into_internal_node(Node *node, Body *body)
     // Update total mass
     // Check what limit the body should be at nw, ne. se, sw
     _subdivide_and_insert(node, body);
-    _update_mass(node);
+    // _update_mass(node);
 }
 
 /// @brief Insert body into a node
@@ -239,6 +239,7 @@ Node *create_quadtree(Body *bodies, uint count)
         }
     }
 
+    update_masses_for_nodes(root);
     if (body_count == 1)
     {
         root->type = EXTERNAL;
@@ -250,12 +251,6 @@ Node *create_quadtree(Body *bodies, uint count)
 
     return root;
 }
-
-struct node_mass {
-    double mass;
-    double x;
-    double y;
-};
 
 node_mass _get_mass_of_node(Node * node){
     node_mass ret;
@@ -318,9 +313,8 @@ void _calculate_force_on_body(Node *node, Body *body)
         return;
     }
 
-    node_mass data = _get_mass_of_node(node);
-    double dx = body->x_pos - data.x;
-    double dy = body->y_pos - data.y;
+    double dx = body->x_pos - node->center_of_mass_x;
+    double dy = body->y_pos - node->center_of_mass_y;
     double d = sqrt((dx * dx) + (dy * dy));
     if (d < rlimit)
         d = rlimit;
@@ -331,19 +325,19 @@ void _calculate_force_on_body(Node *node, Body *body)
         // This node is a singular body
         // Add this net force onto b's net force
         double d3 = d * d * d;
-        body->x_force += (G * data.mass * body->mass * dx) / d3;
-        body->y_force += (G * data.mass * body->mass * dy) / d3;
+        body->x_force += (G * node->total_mass * body->mass * dx) / d3;
+        body->y_force += (G * node->total_mass * body->mass * dy) / d3;
         // printf("body_index:%d EXTERNAL\n", body->index);
     }
     else if (node->type == INTERNAL)
     {
-        assert(data.mass != 0);
+        assert(node->total_mass != 0);
         // s in this case can be thought of the xlim or ylim
         if ((node->x_lim/ d) < THETA) // TODO: this could be the case where this is not *2, I think its * 2 because x_lim describes how to draw the kids and we're getting it for this ndoe instead and not the kids
         {                                  // s/d < theta
             double d3 = d * d * d;         // Power of 3
-            body->x_force += (G * data.mass * body->mass * dx) / d3;
-            body->y_force += (G * data.mass * body->mass * dy) / d3;
+            body->x_force += (G * node->total_mass * body->mass * dx) / d3;
+            body->y_force += (G * node->total_mass * body->mass * dy) / d3;
             // printf("body_index:%d INTERNAL APROX\n", body->index);
 
         }
@@ -369,6 +363,56 @@ void _calculate_force_on_body(Node *node, Body *body)
         // printf("It has: mass: %f center_of_mass %f, %f!\n", node->total_mass, node->center_of_mass_x, node->center_of_mass_y);
         assert(false);
     }
+}
+
+
+void update_masses_for_nodes(Node *node){
+    node->total_mass = 0;
+    node->center_of_mass_x = 0;
+    node->center_of_mass_y = 0;
+
+    // Go to each child and update the mass
+    if (node->body != nullptr) {
+        assert(node->type == EXTERNAL);
+        node->total_mass = node->body->mass;
+        node->center_of_mass_x = node->body->x_pos;
+        node->center_of_mass_y = node->body->y_pos;
+        return;
+    }
+
+    assert(node->type == INTERNAL);
+
+    if (node->nw != nullptr) {
+        update_masses_for_nodes(node->nw);
+        node->total_mass += node->nw->total_mass;
+        node->center_of_mass_x += node->nw->total_mass * node->nw->center_of_mass_x;
+        node->center_of_mass_y += node->nw->total_mass * node->nw->center_of_mass_y;
+    }
+
+    if (node->ne != nullptr) {
+        update_masses_for_nodes(node->ne);
+        node->total_mass += node->ne->total_mass;
+        node->center_of_mass_x += node->ne->total_mass * node->ne->center_of_mass_x;
+        node->center_of_mass_y += node->ne->total_mass * node->ne->center_of_mass_y;
+    }
+
+    if (node->sw != nullptr) {
+        update_masses_for_nodes(node->sw);
+        node->total_mass += node->sw->total_mass;
+        node->center_of_mass_x += node->sw->total_mass * node->sw->center_of_mass_x;
+        node->center_of_mass_y += node->sw->total_mass * node->sw->center_of_mass_y;
+    }
+
+    if (node->se != nullptr) {
+        update_masses_for_nodes(node->se);
+        node->total_mass += node->se->total_mass;
+        node->center_of_mass_x += node->se->total_mass * node->se->center_of_mass_x;
+        node->center_of_mass_y += node->se->total_mass * node->se->center_of_mass_y;
+    }
+
+    assert( node->total_mass !=0);
+    node->center_of_mass_x = node->center_of_mass_x/node->total_mass;
+    node->center_of_mass_y = node->center_of_mass_y/node->total_mass;
 }
 
 /// @brief Calculate the forces within a quadtree
