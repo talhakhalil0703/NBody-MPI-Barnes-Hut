@@ -234,7 +234,7 @@ int main(int argc, char **argv)
                 }
             }
             if (!approx_equal(mass, root->total_mass)){
-                printf("Step %d Expected  Mass: %f Mass: %f\n",s, mass, root->total_mass);
+                // printf("Step %d Expected  Mass: %f Mass: %f\n",s, mass, root->total_mass);
                 assert(false);
             }
             if (root->type != INVALID)

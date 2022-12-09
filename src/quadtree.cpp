@@ -365,8 +365,8 @@ void _calculate_force_on_body(Node *node, Body *body)
     }
     else
     {
-        printf("This node is Invalid!\n");
-        printf("It has: mass: %f center_of_mass %f, %f!\n", node->total_mass, node->center_of_mass_x, node->center_of_mass_y);
+        // printf("This node is Invalid!\n");
+        // printf("It has: mass: %f center_of_mass %f, %f!\n", node->total_mass, node->center_of_mass_x, node->center_of_mass_y);
         assert(false);
     }
 }

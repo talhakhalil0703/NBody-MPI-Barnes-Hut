@@ -1,7 +1,7 @@
 CC = mpicxx
 SRCS = ./src/*.cpp
 INC = ./src/
-OPTS =  -lglfw3 -lGL -lX11 -lpthread -lXrandr -ldl -lGLEW -std=c++17
+OPTS =  -lglfw3 -lGL -lX11 -lpthread -lXrandr -ldl -lGLEW -std=c++17 -DNDEBUG
 
 EXEC = nbody
 EXEC_DEBUG = nbody_debug
