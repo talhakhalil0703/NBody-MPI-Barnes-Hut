@@ -2,9 +2,15 @@
 
 void print_body(Body *b)
 {
-    printf("index: %d, x_pos: %f, y_pos: %f, mass: %f, x_vel: %f, y_vel: %f, x_force: %f, y_force: %f\n",
+    printf("%d\t%f\t%f\t %f\t%f\t%f\t%f\t%f\n",
            b->index, b->x_pos, b->y_pos, b->mass, b->x_vel, b->y_vel, b->x_force, b->y_force);
 }
+
+// void print_body(Body *b)
+// {
+//     printf("index: %d, x_pos: %f, y_pos: %f, mass: %f, x_vel: %f, y_vel: %f, x_force: %f, y_force: %f\n",
+//            b->index, b->x_pos, b->y_pos, b->mass, b->x_vel, b->y_vel, b->x_force, b->y_force);
+// }
 
 void update_pos_and_vel(Body *b)
 {
@@ -15,8 +21,8 @@ void update_pos_and_vel(Body *b)
     // Vx' = Vx + ax*dt
     // Vy' = Vy + ay*dt
     assert(b->mass != -1);
-    double ax = b->x_force / b->mass;
-    double ay = b->y_force / b->mass;
+    double ax = -1*b->x_force / b->mass;
+    double ay = -1*b->y_force / b->mass;
     b->x_pos = (b->x_pos) + (b->x_vel * dt) + (0.5 * ax * dt * dt);
     b->y_pos = (b->y_pos) + (b->y_vel * dt) + (0.5 * ay * dt * dt);
     b->x_vel = (b->x_vel) + (ax * dt);

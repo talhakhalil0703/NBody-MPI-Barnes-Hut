@@ -251,6 +251,64 @@ Node *create_quadtree(Body *bodies, uint count)
     return root;
 }
 
+struct node_mass {
+    double mass;
+    double x;
+    double y;
+};
+
+node_mass _get_mass_of_node(Node * node){
+    node_mass ret;
+    ret.mass = 0;
+    ret.x = 0;
+    ret.y = 0;
+
+    // Go to each child and update the mass
+    if (node->body != nullptr) {
+        assert(node->type == EXTERNAL);
+        ret.mass = node->body->mass;
+        ret.x = node->body->x_pos;
+        ret.y = node->body->y_pos;
+        return ret;
+    }
+
+    assert(node->type == INTERNAL);
+
+    if (node->nw != nullptr) {
+        node_mass temp = _get_mass_of_node(node->nw);
+        ret.mass += temp.mass;
+        ret.x += temp.mass*temp.x;
+        ret.y += temp.mass*temp.y;
+    }
+
+    if (node->ne != nullptr) {
+        node_mass temp = _get_mass_of_node(node->ne);
+        ret.mass += temp.mass;
+        ret.x += temp.mass*temp.x;
+        ret.y += temp.mass*temp.y;
+    }
+
+    if (node->sw != nullptr) {
+        node_mass temp = _get_mass_of_node(node->sw);
+        ret.mass += temp.mass;
+        ret.x += temp.mass*temp.x;
+        ret.y += temp.mass*temp.y;
+    }
+
+    if (node->se != nullptr) {
+        node_mass temp = _get_mass_of_node(node->se);
+        ret.mass += temp.mass;
+        ret.x += temp.mass*temp.x;
+        ret.y += temp.mass*temp.y;
+    }
+
+    assert(ret.mass !=0);
+    ret.x = ret.x/ret.mass;
+    ret.y = ret.y/ret.mass;
+    return ret;
+
+}
+
 void _calculate_force_on_body(Node *node, Body *body)
 {
     assert(body->mass != -1);
@@ -260,9 +318,10 @@ void _calculate_force_on_body(Node *node, Body *body)
         return;
     }
 
-    double dx = body->x_pos - node->center_of_mass_x;
-    double dy = body->y_pos - node->center_of_mass_y;
-    double d = sqrt(dx * dx + dy * dy);
+    node_mass data = _get_mass_of_node(node);
+    double dx = body->x_pos - data.x;
+    double dy = body->y_pos - data.y;
+    double d = sqrt((dx * dx) + (dy * dy));
     if (d < rlimit)
         d = rlimit;
 
@@ -272,20 +331,26 @@ void _calculate_force_on_body(Node *node, Body *body)
         // This node is a singular body
         // Add this net force onto b's net force
         double d3 = d * d * d;
-        body->x_force += G * node->total_mass * body->mass * dx / d3;
-        body->y_force += G * node->total_mass * body->mass * dy / d3;
+        body->x_force += (G * data.mass * body->mass * dx) / d3;
+        body->y_force += (G * data.mass * body->mass * dy) / d3;
+        // printf("body_index:%d EXTERNAL\n", body->index);
     }
     else if (node->type == INTERNAL)
     {
+        assert(data.mass != 0);
         // s in this case can be thought of the xlim or ylim
-        if ((node->x_lim * 2 / d) < THETA) // TODO: this could be the case where this is not *2, I think its * 2 because x_lim describes how to draw the kids and we're getting it for this ndoe instead and not the kids
-        {                                // s/d < theta
-            double d3 = d * d * d;       // Power of 3
-            body->x_force += G * node->total_mass * body->mass * dx / d3;
-            body->y_force += G * node->total_mass * body->mass * dy / d3;
+        if ((node->x_lim/ d) < THETA) // TODO: this could be the case where this is not *2, I think its * 2 because x_lim describes how to draw the kids and we're getting it for this ndoe instead and not the kids
+        {                                  // s/d < theta
+            double d3 = d * d * d;         // Power of 3
+            body->x_force += (G * data.mass * body->mass * dx) / d3;
+            body->y_force += (G * data.mass * body->mass * dy) / d3;
+            // printf("body_index:%d INTERNAL APROX\n", body->index);
+
         }
         else
         {
+            // printf("body_index:%d INTERNAL NO APROX\n", body->index);
+
             // Recurse in each node for the body
             // recurse
             if (node->nw != nullptr)
@@ -315,6 +380,7 @@ void calculate_pos_vel_for_body(Node *root, Body *body)
         return;
     // Only uses node data to calculate stuff for other bodies
     _calculate_force_on_body(root, body);
+
     // Update position and velocity for the body
     update_pos_and_vel(body);
 }

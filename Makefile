@@ -1,7 +1,7 @@
 CC = mpicxx
 SRCS = ./src/*.cpp
 INC = ./src/
-OPTS =  -lglfw3 -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lGLEW -std=c++17
+OPTS =  -lglfw3 -lGL -lX11 -lpthread -lXrandr -ldl -lGLEW -std=c++17
 
 EXEC = nbody
 EXEC_DEBUG = nbody_debug
@@ -13,7 +13,7 @@ compile_debug:
 	$(CC) $(SRCS) $(OPTS) -g -I$(INC) -o $(EXEC_DEBUG)
 
 compile:
-	$(CC) $(SRCS) $(OPTS) -O3 -I$(INC) -o $(EXEC)
+	$(CC) $(SRCS) $(OPTS) -o3 -I$(INC) -o $(EXEC)
 
 clean:
 	rm -f $(EXEC)

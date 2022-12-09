@@ -16,7 +16,7 @@ struct Body
     int index = -1;
     double x_pos = 0;
     double y_pos = 0;
-    double mass = 0;
+    double mass = -1;
     double x_vel = 0;
     double y_vel = 0;
     double x_force = 0;

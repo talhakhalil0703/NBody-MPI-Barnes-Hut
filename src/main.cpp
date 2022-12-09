@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 
     if (rank == 0)
     {
-        print_opts(&opts);
+        // print_opts(&opts);
         if (visuals)
         {
             /* OpenGL window dims */
